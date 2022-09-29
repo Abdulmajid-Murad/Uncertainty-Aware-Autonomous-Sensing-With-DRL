@@ -20,16 +20,15 @@ TODO
 
  | <img src="/dataset/plots/aq_data.jpg" alt="drawing" width="800"/> |
  |:--:|
- |Air quality at four sensing stations in Trondheim, Norway|
+ |Air quality at four sensing stations in Trondheim, Norway. These data are offered by the Norwegian Institute for Air Research (NILU) (https://www.nilu.com/open-data/).|
  
  | <img src="/dataset/plots/aq_index.jpg" alt="drawing" width="800"/> |
  |:--:|
- |Air quality index at four sensing stations in Trondheim, Norway|
+ |Air quality index.|
  
  | <img src="/dataset/plots/aq_index.jpg" alt="drawing" width="800"/> |
  |:--:|
- |Air quality histogram at four sensing stations in Trondheim, Norway. These data are offered by the Norwegian Institute for Air Research (NILU)
-(https://www.nilu.com/open-data/).|
+ |Air quality histogram.|
 
 
  ### weather data
