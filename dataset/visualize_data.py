@@ -189,7 +189,7 @@ def visualize_indoor_noise():
 
     axs[2].plot(df_noise.index, df_noise.is_workday, color='brown')
     axs[2].set_xlim(xlim)
-    axs[2].set_ylabel('Is Woray?')
+    axs[2].set_ylabel('Is Workday?')
 
     axs[3].plot(df_noise.index, df_noise.is_class, color='orange')
     axs[3].set_xlim(xlim)
