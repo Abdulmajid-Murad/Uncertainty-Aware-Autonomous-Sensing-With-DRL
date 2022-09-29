@@ -22,11 +22,11 @@ TODO
  |:--:|
  |Air quality at four sensing stations in Trondheim, Norway. These data are offered by the Norwegian Institute for Air Research (NILU) (https://www.nilu.com/open-data/).|
  
- | <img src="/dataset/plots/aq_index.jpg" alt="drawing" width="800"/> |
+ | <img src="/dataset/plots/aq_index_all_stations.jpg" alt="drawing" width="800"/> |
  |:--:|
  |Air quality index.|
  
- | <img src="/dataset/plots/aq_index.jpg" alt="drawing" width="800"/> |
+ | <img src="/dataset/plots/right_skewed.jpg" alt="drawing" width="800"/> |
  |:--:|
  |Air quality histogram.|
 
