@@ -54,3 +54,9 @@ Norwegian Public Roads Administration (https://www.vegvesen.no/trafikkdata/start
  |:--:|
  |Data of the duration in which a street-cleaning is taking place on the main streets of
 Trondheim, reported by the municipality.|
+ 
+ ### Indoor Noise data
+
+ | <img src="/dataset/plots/indoor_noise_data.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |Indoor noise data, collected using a noise sensor deployed in a university (NTNU) working environment|

@@ -171,6 +171,36 @@ def visualize_street_cleaning():
     fig.tight_layout()
     fig.savefig('./dataset/plots/street_cleaning_data.jpg', bbox_inches='tight')
 
+def visualize_indoor_noise():
+    df_noise = pd.read_csv('./dataset/noise_data.csv', index_col='time', parse_dates=True)
+    df_noise['midnight_delta']=(48-abs(df_noise.q_num-48))/48
+    df_noise['is_workday'] = ((df_noise.is_weekend==0) & (df_noise.is_holiday == 0)).astype(int)
+
+    fig, axs = plt.subplots(5, 1,  figsize=(20, 15))
+    axs[0].plot(df_noise.index, df_noise.leq, color='r')
+    xlim = [pd.to_datetime('2019-02-06'), pd.to_datetime('2019-04-27')]
+    axs[0].set_ylim(40, 70)
+    axs[0].set_xlim(xlim)
+    axs[0].set_ylabel('Noise level (Leq, dB)')
+
+    axs[1].plot(df_noise.index, df_noise.midnight_delta, color='blue')
+    axs[1].set_xlim(xlim)
+    axs[1].set_ylabel('$\Delta t$ (from midnight)')
+
+    axs[2].plot(df_noise.index, df_noise.is_workday, color='brown')
+    axs[2].set_xlim(xlim)
+    axs[2].set_ylabel('Is Woray?')
+
+    axs[3].plot(df_noise.index, df_noise.is_class, color='orange')
+    axs[3].set_xlim(xlim)
+    axs[3].set_ylabel('Is Class?')
+
+    axs[4].plot(df_noise.index, df_noise.weekday, color='orange')
+    axs[4].set_xlim(xlim)
+    axs[4].set_ylabel('Week day')
+
+    fig.tight_layout()
+    fig.savefig('./dataset/plots/indoor_noise_data.jpg', bbox_inches='tight')
 
 
 if __name__ == "__main__":
@@ -179,3 +209,4 @@ if __name__ == "__main__":
     visualize_traffic()
     visualize_street_cleaning()
     visualize_aq_index()
+    visualize_indoor_noise()
