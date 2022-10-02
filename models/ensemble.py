@@ -149,7 +149,7 @@ class Deep_Ensemble():
                 network.eval()
                 features = torch.from_numpy(X_test).type(torch.float)
                 features  = features.to(self.device)
-                pred_mean = self.network(features)
+                pred_mean = network(features)
                 pred_mean = pred_mean.detach().cpu().numpy()
                 samples_mean.append(pred_mean)
             mixture_mean = np.mean(samples_mean, axis=0)
@@ -167,7 +167,7 @@ class Deep_Ensemble():
             network.eval()
             features = torch.from_numpy(X_test).type(torch.float)
             features  = features.to(self.device)
-            output = self.network(features)
+            output = network(features)
             output = output.detach().cpu().numpy()
             output[0] = y_true_clas[0] # enforce measurement
             samples.append(output)
