@@ -8,10 +8,17 @@ Run the "main.py" script to evaluate the already trained agents. This will plot 
  ```bash
  python main.py --sensing_station="Tiller"
  ```
+### Uniform
+
+$MPOT = 25.00, rmse = 16.81, picp = 0.70, mpiw = 14.68, crps = 0.43, nll = 3.70$
 
  | <img src="/plots/Uniform_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
  |Periodic (uniform) Sensing Policy|
+
+### RL
+
+$MPOT = 37.40 \pm 4.25, rmse = 15.17 \pm 1.38, picp = 0.70 \pm 0.01, mpiw = 13.81 \pm 0.28, crps = 0.40 \pm 0.02, nll = 4.40 \pm 1.42$
 
  | <img src="/plots/agent_0_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
