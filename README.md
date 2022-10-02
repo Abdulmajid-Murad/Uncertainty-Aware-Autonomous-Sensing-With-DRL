@@ -10,16 +10,38 @@ Run the "main.py" script to evaluate the already trained agents. This will plot 
  ```
 
  | <img src="/plots/Uniform_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |Periodic (uniform) Sensing Policy|
  | <img src="/plots/agent_0_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |RL (agent0) Sensing Policy|
  | <img src="/plots/agent_1_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |RL (agent1) Sensing Policy|
  | <img src="/plots/agent_2_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |RL (agent2) Sensing Policy|
  | <img src="/plots/agent_3_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |RL (agent3) Sensing Policy|
  | <img src="/plots/agent_4_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |RL (agent4) Sensing Policy|
  | <img src="/plots/agent_5_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |RL (agent5) Sensing Policy|
  | <img src="/plots/agent_6_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |RL (agent6) Sensing Policy|
  | <img src="/plots/agent_7_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |RL (agent7) Sensing Policy|
  | <img src="/plots/agent_8_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |RL (agent8) Sensing Policy|
  | <img src="/plots/agent_9_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |RL (agent9) Sensing Policy|
 
 
 ## Predictor
