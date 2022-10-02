@@ -1,10 +1,32 @@
 # Uncertainty-Aware-Autonomous-Sensing-With-DRL
-TODO
+ 
+PyTorch implementation of a paper titled: Uncertainty-Aware Autonomous Sensing with Deep Reinforcement Learning.
+
+Run the "main.py" script to evaluate the already trained agents. This will plot the results and save them in the "./plots" folder.
+
+
+ ```bash
+ python main.py --sensing_station="Tiller"
+ ```
+
+ | <img src="/plots/Uniform_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_0_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_1_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_2_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_3_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_4_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_5_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_6_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_7_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_8_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_9_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+
+
 ## Predictor
-TODO
+TODO: add more details
 
 ## Sensing Agent
-TODO
+TODO: add more details
 
  ## Dataset
  
