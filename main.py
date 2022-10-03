@@ -2,6 +2,7 @@ import os
 import argparse
 import numpy as np
 from SensorGym import SensorGymEnv
+from torch import nn
 from stable_baselines3 import A2C, SAC, PPO, TD3
 from stable_baselines3.common.monitor import Monitor
 from stable_baselines3.common.vec_env import DummyVecEnv
@@ -22,11 +23,17 @@ def train_rl_agent(args):
                                forecast_horizon=args.forecast_horizon,
                                historical_sequence_length=args.historical_sequence_length,
                                sensing_station=args.sensing_station))
+
+
+    policy_kwargs = dict(net_arch=[dict(pi=[64, 64], vf=[64, 64])],
+                         activation_fn=nn.Tanh)
+
     agent = PPO(MlpPolicy,
                 train_env, 
                 verbose=1, 
                 gamma=0.999, 
-                seed=args.seed)
+                seed=args.seed,
+                policy_kwargs=policy_kwargs)
 
     os.makedirs(args.save_dir, exist_ok=True)
     agent_name =args.save_dir + "agent_"+str(args.seed)
@@ -51,8 +58,8 @@ def evaluate(args):
     print("**************** Running Uniform Sensing **********************")
     uniform_reward, uniform_stats = uniform_sensing(env, fig_name="Uniform_"+args.sensing_station+"_"+args.agent_start_test)
     stats_names = ["MPOT", "rmse", "picp", "mpiw", "crps", "nll"]
-    stats_values_names = [(name, value) for name, value in zip(stats_names, uniform_stats)]
-    for result in stats_values_names:
+    uniform_stats_values_names = [(name, value) for name, value in zip(stats_names, uniform_stats)]
+    for result in uniform_stats_values_names:
         print("{0} = {1:0.2f}".format(result[0], result[1]))
 
 
@@ -64,7 +71,13 @@ def evaluate(args):
         model = PPO.load(agent)
         rl_reward, rl_stats = evaluate_rl(model, env, fig_name='agent_'+str(i)+'_'+args.sensing_station+"_"+args.agent_start_test,  num_episodes=1)
         all_stats[i] = rl_stats
+        print("----------------Agent {} --------------".format(i))
+        RL_stats_values_names = [(name, value) for name, value in zip(stats_names, rl_stats)]
+        for result in RL_stats_values_names:
+            print("{0} = {1:0.2f}".format(result[0], result[1]))
 
+
+    print("****************** Results for all Agents **********************")
     stats_mean = all_stats.mean(axis=0)
     stats_std = all_stats.std(axis=0)
 
@@ -91,12 +104,16 @@ if __name__ == '__main__':
     parser.add_argument('--prediction_task', type=str, default='regression', help='regression or both (regression and classification) (default: regression)')
     parser.add_argument('--predictor_model', type=str, default='BNN', help='BNN, NN_MC, Deep_Ensemble, or SWAG (default: BBC)')
     #General
-    parser.add_argument('--sensing_station', type=str, default='Elgeseter',  help='Sensing station: Elegeseter, Tiller, Torvet, or Bakke kirke (default: ../Elgeseter)')
+    parser.add_argument('--sensing_station', type=str, default='Tiller',  help='Sensing station: Elegeseter, Tiller, Torvet, or Bakke kirke (default: Tiller)')
     parser.add_argument('--save_dir', type=str, default='./pretrained',  help='dir for saving trained agents and predictors (default: ../pretrained)')
     parser.add_argument('--mode', type=str, default='evaluate', help='train or evaluate (default: evaluate)')
     args = parser.parse_args()
-    print('Input Args: ', args)
-    
+
+    print('********************Input Arguments************************')
+    args_dict = vars(args)
+    print("{" + "\n".join("{!r}: {!r},".format(k, v) for k, v in args_dict.items()) + "}")
+    print('***********************************************************')
+
     if args.mode=="Train":
         train_rl_agent(args)
     else:

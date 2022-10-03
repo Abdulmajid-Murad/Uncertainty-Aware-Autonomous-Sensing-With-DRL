@@ -39,7 +39,6 @@ class Predictor():
             }
         model = models_types[self.model_type]
         input_dim = self.num_latest_measurements*2 + self.sequence_length*(self.df_traffic.shape[-1] + self.df_weather.shape[-1] + self.df_street_cleaning.shape[-1])
-        print(model)
         self.model_reg = model(input_dim=input_dim,
                             output_dim=1,
                             task='regression',
