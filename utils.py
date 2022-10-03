@@ -1,6 +1,7 @@
 
 import math
 import numpy as np
+import torch
 
 def evaluate_rl(model, env, fig_name , num_episodes=1):
     catched_threeshold_exceedance_total = 0
@@ -51,3 +52,30 @@ def uniform_sensing(env, fig_name,  rounding='nearest'):
     stats = np.array(stats)
 
     return total_reward, stats
+
+def get_device():
+    if torch.cuda.is_available():
+        dev = "cuda:0"
+        torch.cuda.manual_seed(42)
+    else:
+        dev="cpu"
+    device = torch.device(dev)
+    print('Running computation on: ', device)
+    return device
+
+
+def plot_training_curve_bnn(nll_history, kl_history, lr_history, fig_save_name):
+    fig, axs = plt.subplots(1, 3, figsize=(21, 4))
+    axs[0].plot(nll_history)
+    axs[0].set_xlabel('Epochs')
+    axs[0].set_ylabel("NLL Loss")
+    axs[1].plot(kl_history)
+    axs[1].set_xlabel('Epochs')
+    axs[1].set_ylabel("KLL Loss")
+
+    axs[2].plot(lr_history)
+    axs[2].set_xlabel('Epochs')
+    axs[2].set_ylabel("Learning rate")
+    axs[2].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+    fig.tight_layout()
+    fig.savefig(fig_save_name, bbox_inches='tight')

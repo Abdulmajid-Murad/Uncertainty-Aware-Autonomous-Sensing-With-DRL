@@ -6,144 +6,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.optim.lr_scheduler import ExponentialLR
-from probabilistic_forecast.utils.torch_utils import get_device
-from probabilistic_forecast.utils.plot_utils import plot_training_curve_bnn, plot_regression, plot_classification
-
-
-def isotropic_gauss_loglike(x, mu, sigma, do_sum=True):
-    cte_term = -(0.5) * np.log(2 * np.pi)
-    det_sig_term = -torch.log(sigma)
-    inner = (x - mu) / sigma
-    dist_term = -(0.5) * (inner ** 2)
-
-    if do_sum:
-        out = (cte_term + det_sig_term + dist_term).sum()  # sum over all weights
-    else:
-        out = (cte_term + det_sig_term + dist_term)
-    return out
-
-
-class laplace_prior(object):
-    def __init__(self, mu, b):
-        self.mu = mu
-        self.b = b
-
-    def loglike(self, x, do_sum=True):
-        if do_sum:
-            return (-np.log(2 * self.b) - torch.abs(x - self.mu) / self.b).sum()
-        else:
-            return (-np.log(2 * self.b) - torch.abs(x - self.mu) / self.b)
-
-
-class isotropic_gauss_prior(object):
-    def __init__(self, mu, sigma):
-        self.mu = mu
-        self.sigma = sigma
-
-        self.cte_term = -(0.5) * np.log(2 * np.pi)
-        self.det_sig_term = -np.log(self.sigma)
-
-    def loglike(self, x, do_sum=True):
-
-        dist_term = -(0.5) * ((x - self.mu) / self.sigma) ** 2
-        if do_sum:
-            return (self.cte_term + self.det_sig_term + dist_term).sum()
-        else:
-            return (self.cte_term + self.det_sig_term + dist_term)
-    
-
-class BayesianLayer(nn.Module):
-
-    def __init__(self, input_dim, output_dim, prior_class):
-        super().__init__()
-        self.n_in = input_dim
-        self.n_out = output_dim
-        self.prior = prior_class
-
-        # Learnable parameters -> Initialisation is set empirically.
-        self.W_mu = nn.Parameter(torch.Tensor(self.n_in, self.n_out).uniform_(-0.1, 0.1))
-        self.W_p = nn.Parameter(torch.Tensor(self.n_in, self.n_out).uniform_(-3, -2))
-
-        self.b_mu = nn.Parameter(torch.Tensor(self.n_out).uniform_(-0.1, 0.1))
-        self.b_p = nn.Parameter(torch.Tensor(self.n_out).uniform_(-3, -2))
-
-        self.lpw = 0
-        self.lqw = 0
-
-    def forward(self, X):
-
-        eps_W = Variable(self.W_mu.data.new(self.W_mu.size()).normal_())
-        eps_b = Variable(self.b_mu.data.new(self.b_mu.size()).normal_())
-
-        # sample parameters
-        std_w = 1e-6 + F.softplus(self.W_p, beta=1, threshold=20)
-        std_b = 1e-6 + F.softplus(self.b_p, beta=1, threshold=20)
-
-        W = self.W_mu + 1 * std_w * eps_W
-        b = self.b_mu + 1 * std_b * eps_b
-
-        output = torch.mm(X, W) + b.unsqueeze(0).expand(X.shape[0], -1)  # (batch_size, n_output)
-
-        lqw = isotropic_gauss_loglike(W, self.W_mu, std_w) + isotropic_gauss_loglike(b, self.b_mu, std_b)
-        lpw = self.prior.loglike(W) + self.prior.loglike(b)
-        return output, lqw-lpw
-
-        
-class BayesianNetwork(nn.Module):
-    def __init__(self, input_dim, output_dim, net_arch, task, get_aleatoric_uncertainty):
-        super().__init__()
-
-#         self.prior_class= laplace_prior(mu=0, b=0.1)
-        self.prior_class= isotropic_gauss_prior(mu=0, sigma=0.1)
-        self.input_dim = input_dim
-        self.output_dim = output_dim
-        self.net_arch = net_arch
-        self.task = task
-        self.get_aleatoric_uncertainty = get_aleatoric_uncertainty
-        
-        self.layers = nn.ModuleList()
-        in_features = self.input_dim
-        for hidden_size in self.net_arch:
-            self.layers.append(BayesianLayer(input_dim=in_features, output_dim=hidden_size, prior_class=self.prior_class))
-            in_features = hidden_size
-
-        if self.task == 'regression':
-            if self.get_aleatoric_uncertainty:
-                self.layers.append(BayesianLayer(input_dim=in_features, output_dim=2*self.output_dim, prior_class=self.prior_class))
-            else: 
-                self.layers.append(BayesianLayer(input_dim=in_features, output_dim=self.output_dim, prior_class=self.prior_class))
-            self.Softplus= nn.Softplus()
-        elif self.task == 'classification':
-            self.layers.append(BayesianLayer(input_dim=in_features, output_dim=self.output_dim, prior_class=self.prior_class))
-            self.Sigmoid= nn.Sigmoid()
-                                    
-        self.act = nn.ReLU(inplace=True)
-
-    def forward(self, x):
-        kl_total = 0
-        
-        for layer in self.layers[:-1]:
-            x, kl = layer(x)
-            kl_total += kl 
-            x = self.act(x)
-        
-        out, kl = self.layers[-1](x)
-        kl_total += kl
-
-        if self.task == 'regression':
-            mean = out[:, :self.output_dim]
-            if self.get_aleatoric_uncertainty:
-                # The variance should always be positive (softplus) and la
-                variance = self.Softplus(out[:, self.output_dim:])+ 1e-06 
-                return mean, variance, kl_total
-            else:
-                return mean, kl_total
-
-        elif self.task == 'classification':
-            prob = self.Sigmoid(out)
-            return prob, kl_total
-
-
+from utils import get_device
+from utils import plot_training_curve_bnn
 
 class BNN():
     def __init__(self, input_dim, output_dim, task, get_aleatoric_uncertainty):
@@ -324,50 +188,153 @@ class BNN():
         samples = np.array(samples) 
         return samples
 
-    def evaluate_trash(self, test_loader, n_samples, pre_trained_dir, adversarial_training=True):
-        print('Evaluating a pretrained {} model {} adversarial training. Task: {}'.format(type(self).__name__, 
-            'with' if adversarial_training else 'without', self.task))
-        pre_trained_dir = os.path.join(pre_trained_dir, type(self).__name__)
-        model_save_name = pre_trained_dir + '/trained_network_'+ self.task + ('_adv.pt' if adversarial_training else '.pt')
-        self.network.load_state_dict(torch.load(model_save_name, map_location=self.device))
-        self.network.eval()
-        if self.task =='regression':
-            samples_mean, samples_var = [], []
-            for _ in range(n_samples):
-                pred_mean_set, pred_var_set = [], []
-                for _, (features , _ ) in enumerate(test_loader):
-                    features = features.to(self.device)
-                    pred_mean, pred_var, _ = self.network(features)
-                    pred_mean_set.append(pred_mean.detach().cpu().numpy())
-                    pred_var_set.append(pred_var.detach().cpu().numpy())
-                pred_mean_i, pred_var_i =  np.concatenate(pred_mean_set, axis=0), np.concatenate(pred_var_set, axis=0)
-                samples_mean.append(pred_mean_i)
-                samples_var.append(pred_var_i)
-            samples_mean = np.array(samples_mean)
-            samples_var = np.array(samples_var)
-            mixture_mean = np.mean(samples_mean, axis=0)
-            mixture_var = np.mean(samples_var + np.square(samples_mean), axis=0) - np.square(mixture_mean)
-            target_test  = self.get_target_test(test_loader)
-            return target_test, mixture_mean, mixture_var
+    def load_parameters_reg(self, pre_trained_dir):
+        model_save_name_reg = pre_trained_dir + '/trained_network_'+ 'regression' +  '.pt'
+        self.network.load_state_dict(torch.load(model_save_name_reg, map_location=self.device))
+    
+    def load_parameters_clas(self, pre_trained_dir):
+        model_save_name_clas = pre_trained_dir + '/trained_network_'+ 'classification' +  '.pt'
+        self.network.load_state_dict(torch.load(model_save_name_clas, map_location=self.device))
 
-        elif self.task =='classification':
-            samples = []
-            for _ in range(n_samples):
-                pred = []
-                for _, (features , _ ) in enumerate(test_loader):
-                    features  = features.to(self.device)
-                    output, _ = self.network(features)
-                    pred.append(output.detach().cpu().numpy())
-                pred_i = np.concatenate(pred, axis=0)
-                samples.append(pred_i)
-            samples = np.array(samples)  
-            target_test  = self.get_target_test(test_loader)
-            return target_test, samples
 
-    def get_target_test(self, test_loader):
-        target_set = []
-        for _ , ( _ , target) in enumerate(test_loader):
-            target_set.append(target.numpy())
-        return np.concatenate(target_set, axis=0)
+class BayesianNetwork(nn.Module):
+    def __init__(self, input_dim, output_dim, net_arch, task, get_aleatoric_uncertainty):
+        super().__init__()
+
+#         self.prior_class= laplace_prior(mu=0, b=0.1)
+        self.prior_class= isotropic_gauss_prior(mu=0, sigma=0.1)
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.net_arch = net_arch
+        self.task = task
+        self.get_aleatoric_uncertainty = get_aleatoric_uncertainty
+        
+        self.layers = nn.ModuleList()
+        in_features = self.input_dim
+        for hidden_size in self.net_arch:
+            self.layers.append(BayesianLayer(input_dim=in_features, output_dim=hidden_size, prior_class=self.prior_class))
+            in_features = hidden_size
+
+        if self.task == 'regression':
+            if self.get_aleatoric_uncertainty:
+                self.layers.append(BayesianLayer(input_dim=in_features, output_dim=2*self.output_dim, prior_class=self.prior_class))
+            else: 
+                self.layers.append(BayesianLayer(input_dim=in_features, output_dim=self.output_dim, prior_class=self.prior_class))
+            self.Softplus= nn.Softplus()
+        elif self.task == 'classification':
+            self.layers.append(BayesianLayer(input_dim=in_features, output_dim=self.output_dim, prior_class=self.prior_class))
+            self.Sigmoid= nn.Sigmoid()
+                                    
+        self.act = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        kl_total = 0
+        
+        for layer in self.layers[:-1]:
+            x, kl = layer(x)
+            kl_total += kl 
+            x = self.act(x)
+        
+        out, kl = self.layers[-1](x)
+        kl_total += kl
+
+        if self.task == 'regression':
+            mean = out[:, :self.output_dim]
+            if self.get_aleatoric_uncertainty:
+                # The variance should always be positive (softplus) and la
+                variance = self.Softplus(out[:, self.output_dim:])+ 1e-06 
+                return mean, variance, kl_total
+            else:
+                return mean, kl_total
+
+        elif self.task == 'classification':
+            prob = self.Sigmoid(out)
+            return prob, kl_total
+
+
+class BayesianLayer(nn.Module):
+
+    def __init__(self, input_dim, output_dim, prior_class):
+        super().__init__()
+        self.n_in = input_dim
+        self.n_out = output_dim
+        self.prior = prior_class
+
+        # Learnable parameters -> Initialisation is set empirically.
+        self.W_mu = nn.Parameter(torch.Tensor(self.n_in, self.n_out).uniform_(-0.1, 0.1))
+        self.W_p = nn.Parameter(torch.Tensor(self.n_in, self.n_out).uniform_(-3, -2))
+
+        self.b_mu = nn.Parameter(torch.Tensor(self.n_out).uniform_(-0.1, 0.1))
+        self.b_p = nn.Parameter(torch.Tensor(self.n_out).uniform_(-3, -2))
+
+        self.lpw = 0
+        self.lqw = 0
+
+    def forward(self, X):
+
+        eps_W = Variable(self.W_mu.data.new(self.W_mu.size()).normal_())
+        eps_b = Variable(self.b_mu.data.new(self.b_mu.size()).normal_())
+
+        # sample parameters
+        std_w = 1e-6 + F.softplus(self.W_p, beta=1, threshold=20)
+        std_b = 1e-6 + F.softplus(self.b_p, beta=1, threshold=20)
+
+        W = self.W_mu + 1 * std_w * eps_W
+        b = self.b_mu + 1 * std_b * eps_b
+
+        output = torch.mm(X, W) + b.unsqueeze(0).expand(X.shape[0], -1)  # (batch_size, n_output)
+
+        lqw = isotropic_gauss_loglike(W, self.W_mu, std_w) + isotropic_gauss_loglike(b, self.b_mu, std_b)
+        lpw = self.prior.loglike(W) + self.prior.loglike(b)
+        return output, lqw-lpw
+
+
+def isotropic_gauss_loglike(x, mu, sigma, do_sum=True):
+    cte_term = -(0.5) * np.log(2 * np.pi)
+    det_sig_term = -torch.log(sigma)
+    inner = (x - mu) / sigma
+    dist_term = -(0.5) * (inner ** 2)
+
+    if do_sum:
+        out = (cte_term + det_sig_term + dist_term).sum()  # sum over all weights
+    else:
+        out = (cte_term + det_sig_term + dist_term)
+    return out
+
+
+class laplace_prior(object):
+    def __init__(self, mu, b):
+        self.mu = mu
+        self.b = b
+
+    def loglike(self, x, do_sum=True):
+        if do_sum:
+            return (-np.log(2 * self.b) - torch.abs(x - self.mu) / self.b).sum()
+        else:
+            return (-np.log(2 * self.b) - torch.abs(x - self.mu) / self.b)
+
+
+class isotropic_gauss_prior(object):
+    def __init__(self, mu, sigma):
+        self.mu = mu
+        self.sigma = sigma
+
+        self.cte_term = -(0.5) * np.log(2 * np.pi)
+        self.det_sig_term = -np.log(self.sigma)
+
+    def loglike(self, x, do_sum=True):
+
+        dist_term = -(0.5) * ((x - self.mu) / self.sigma) ** 2
+        if do_sum:
+            return (self.cte_term + self.det_sig_term + dist_term).sum()
+        else:
+            return (self.cte_term + self.det_sig_term + dist_term)
+    
+
+
+        
+
+
+
 
 

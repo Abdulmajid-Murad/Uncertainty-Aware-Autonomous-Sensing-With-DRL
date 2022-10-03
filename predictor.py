@@ -43,22 +43,20 @@ class Predictor():
                             output_dim=1,
                             task='regression',
                             get_aleatoric_uncertainty=self.get_aleatoric_uncertainty)
-        pre_trained_dir = os.path.join(self.save_dir, type(self.model_reg).__name__)
-        model_save_name_reg = pre_trained_dir + '/trained_network_'+ 'regression' +  '.pt'
-        if os.path.isfile(model_save_name_reg):
-            print("loading from an already trained Predictor")
-            self.model_reg.network.load_state_dict(torch.load(model_save_name_reg, map_location=self.model_reg.device))
-        else:
-            print("Training a Predictor")
-            self.train()
+        
         if self.task == 'both':
             self.model_clas = model(input_dim=input_dim, 
                                     output_dim=1, 
                                     task='classification',
                                     get_aleatoric_uncertainty=self.get_aleatoric_uncertainty)
-            model_save_name_clas = pre_trained_dir + '/trained_network_'+ 'classification' +  '.pt'
-            if os.path.isfile(model_save_name_clas):
-                self.model_clas.network.load_state_dict(torch.load(model_save_name_clas, map_location=self.model_clas.device))
+        
+        pre_trained_dir = os.path.join(self.save_dir, type(self.model_reg).__name__)
+        if os.path.isdir(pre_trained_dir):
+            print("loading from an already trained Predictor")
+            self.load(pre_trained_dir)
+        else:
+            print("Training a Predictor")
+            self.train()
 
     def _process_data(self):
         df_aq = pd.read_csv(self.data_dir+'/air_quality_measurements.csv',index_col='time',  parse_dates=True)
@@ -197,9 +195,12 @@ class Predictor():
                         pre_trained_dir=self.save_dir,
                         Nbatches=Nbatches,
                         adversarial_training=False)
-
     
-
+    def load(self, pre_trained_dir):
+        self.model_reg.load_parameters_reg(pre_trained_dir)
+        if self.task == "both":
+            self.model_clas.load_parameters_clas(pre_trained_dir)
+                
     def rescale(self, y):
         y = y * self.stats['y_reg_std'] + self.stats['y_reg_mean']
         return y
