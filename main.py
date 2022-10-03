@@ -97,7 +97,7 @@ if __name__ == '__main__':
     parser.add_argument('--agent_end_test', type=str, default='2020-12-30', help='end date of testing (default: 2020-12-31)')
     
     #Predictor's arguments
-    parser.add_argument('--predictor_start_train', type=str, default='2019-01-01', help='Predictor start date of training (default: 2019-01-01)')
+    parser.add_argument('--predictor_start_train', type=str, default='2019-01-02', help='Predictor start date of training (default: 2019-01-02)')
     parser.add_argument('--predictor_end_train', type=str, default='2019-12-31', help='Predictor end date of training (default: 2019-01-01)') 
     parser.add_argument('--forecast_horizon', type=int, default=24 )
     parser.add_argument('--historical_sequence_length', type=int, default=24) 

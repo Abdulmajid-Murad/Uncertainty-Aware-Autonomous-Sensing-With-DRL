@@ -5,32 +5,39 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import ExponentialLR
-from probabilistic_forecast.utils.torch_utils import get_device
-from probabilistic_forecast.utils.plot_utils import plot_training_curve, plot_regression, plot_classification
+from utils import get_device
+from utils import plot_training_curve
 
 
 class NN_MC():
 
-    def __init__(self, input_dim, output_dim, args):
+    def __init__(self, input_dim, output_dim, task, get_aleatoric_uncertainty):
         super().__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
 
         self.net_arch = [512, 512]
-        self.task = args.task
+        self.task = task
+        self.get_aleatoric_uncertainty = get_aleatoric_uncertainty
         self.device = get_device()
 
-        self.network = Network(self.input_dim, self.output_dim, self.net_arch, self.task)
+        self.network = Network(self.input_dim, self.output_dim, self.net_arch, self.task, self.get_aleatoric_uncertainty)
         self.network.to(self.device)
         if self.task == "regression":
-            self.criterion = torch.nn.GaussianNLLLoss(full=True, reduction='sum')
+            if self.get_aleatoric_uncertainty:
+                self.criterion = torch.nn.GaussianNLLLoss(full=True, reduction='sum')
+            else:
+                self.criterion = torch.nn.MSELoss(reduction='sum')
         elif self.task == "classification":
             self.criterion = nn.BCELoss(reduction='sum')
 
 
     def get_loss(self, output, target):
         if self.task == "regression":
-            return self.criterion(output[0], target, output[1]) 
+            if self.get_aleatoric_uncertainty:
+                return self.criterion(output[0], target, output[1])
+            else:
+                return self.criterion(output, target)
         elif self.task == "classification":
             return self.criterion(output, target)
 
@@ -110,64 +117,120 @@ class NN_MC():
         plot_training_curve(loss_history, lr_history, fig_save_name)
         
 
-    def evaluate(self, test_loader, n_samples, pre_trained_dir, adversarial_training=True):
-        print('Evaluating a pretrained {} model {} adversarial training. Task: {}'.format(type(self).__name__, 
-            'with' if adversarial_training else 'without', self.task))
-        pre_trained_dir = os.path.join(pre_trained_dir, type(self).__name__)
-        model_save_name = pre_trained_dir + '/trained_network_'+ self.task + ('_adv.pt' if adversarial_training else '.pt')
-
-        self.network.load_state_dict(torch.load(model_save_name))
+    def evaluate_reg(self, X_test, y_true_reg, **kwargs):
+        n_samples = kwargs.get('n_samples', 50)
+        measurement_error = kwargs.get('measurement_error', 1e-06)
         self.network.eval()
-
-        if self.task =='regression':
+        if self.get_aleatoric_uncertainty:
             samples_mean, samples_var = [], []
             for _ in range(n_samples):
-                pred_mean_set, pred_var_set = [], []
-                for _, (features , _ ) in enumerate(test_loader):
-                    features = features.to(self.device)
-                    pred_mean, pred_var= self.network(features)
-                    pred_mean_set.append(pred_mean.detach().cpu().numpy())
-                    pred_var_set.append(pred_var.detach().cpu().numpy())
-                pred_mean_i, pred_var_i =  np.concatenate(pred_mean_set, axis=0), np.concatenate(pred_var_set, axis=0)
-                samples_mean.append(pred_mean_i)
-                samples_var.append(pred_var_i)
-            samples_mean = np.array(samples_mean)
-            samples_var = np.array(samples_var)
-            mixture_mean = np.mean(samples_mean, axis=0)
-            mixture_var = np.mean(samples_var + np.square(samples_mean), axis=0) - np.square(mixture_mean)
-            target_test  = self.get_target_test(test_loader)
-            return target_test, mixture_mean, mixture_var
+                features = torch.from_numpy(X_test).type(torch.float)
+                features  = features.to(self.device)
+                pred_mean, pred_var = self.network(features)
+                pred_mean = pred_mean.detach().cpu().numpy()
+                pred_var = pred_var.detach().cpu().numpy()
+                samples_mean.append(pred_mean)
+                samples_var.append(pred_var)
 
-        elif self.task =='classification':
-            samples = []
+            mixture_mean = np.mean(samples_mean, axis=0)
+            mixture_var = np.mean(samples_var, axis=0) + np.mean(np.square(samples_mean), axis=0) - np.square(mixture_mean)
+        else:
+            samples_mean = []
             for _ in range(n_samples):
-                pred = []
-                for _, (features , _ ) in enumerate(test_loader):
-                    features  = features.to(self.device)
-                    output= self.network(features)
-                    pred.append(output.detach().cpu().numpy())
-                pred_i = np.concatenate(pred, axis=0)
-                samples.append(pred_i)
-            samples = np.array(samples)  
-            target_test  = self.get_target_test(test_loader)
-            return target_test, samples
+                features = torch.from_numpy(X_test).type(torch.float)
+                features  = features.to(self.device)
+                pred_mean = self.network(features)
+                pred_mean = pred_mean.detach().cpu().numpy()
+                samples_mean.append(pred_mean)
+            mixture_mean = np.mean(samples_mean, axis=0)
+            mixture_var = np.var(samples_mean, axis=0)
+        
+        mixture_mean[0] = y_true_reg[0] # enforce measurements
+        mixture_var[0] = [measurement_error] # enforce measurement error o
+        assert min(mixture_var)>=0, print(mixture_var, samples_var, np.array(samples_var).min())
+        return mixture_mean, mixture_var
+    def evaluate_clas(self, X_test, y_true_clas, **kwargs):
+        n_samples = kwargs.get('n_samples', 50)
+        samples = []
+        self.network.eval()
+        for _ in range(n_samples):
+            features = torch.from_numpy(X_test).type(torch.float)
+            features  = features.to(self.device)
+            output = self.network(features)
+            output = output.detach().cpu().numpy()
+            output[0] = y_true_clas[0] # enforce measurement
+            samples.append(output)
+        samples = np.array(samples) 
+        return samples
+
+    def load_parameters_reg(self, pre_trained_dir):
+        model_save_name_reg = pre_trained_dir + '/trained_network_'+ 'regression' +  '.pt'
+        self.network.load_state_dict(torch.load(model_save_name_reg, map_location=self.device))
+    
+    def load_parameters_clas(self, pre_trained_dir):
+        model_save_name_clas = pre_trained_dir + '/trained_network_'+ 'classification' +  '.pt'
+        self.network.load_state_dict(torch.load(model_save_name_clas, map_location=self.device))
+    
+    
+    # def evaluate(self, test_loader, n_samples, pre_trained_dir, adversarial_training=True):
+    #     print('Evaluating a pretrained {} model {} adversarial training. Task: {}'.format(type(self).__name__, 
+    #         'with' if adversarial_training else 'without', self.task))
+    #     pre_trained_dir = os.path.join(pre_trained_dir, type(self).__name__)
+    #     model_save_name = pre_trained_dir + '/trained_network_'+ self.task + ('_adv.pt' if adversarial_training else '.pt')
+
+    #     self.network.load_state_dict(torch.load(model_save_name))
+    #     self.network.eval()
+
+    #     if self.task =='regression':
+    #         samples_mean, samples_var = [], []
+    #         for _ in range(n_samples):
+    #             pred_mean_set, pred_var_set = [], []
+    #             for _, (features , _ ) in enumerate(test_loader):
+    #                 features = features.to(self.device)
+    #                 pred_mean, pred_var= self.network(features)
+    #                 pred_mean_set.append(pred_mean.detach().cpu().numpy())
+    #                 pred_var_set.append(pred_var.detach().cpu().numpy())
+    #             pred_mean_i, pred_var_i =  np.concatenate(pred_mean_set, axis=0), np.concatenate(pred_var_set, axis=0)
+    #             samples_mean.append(pred_mean_i)
+    #             samples_var.append(pred_var_i)
+    #         samples_mean = np.array(samples_mean)
+    #         samples_var = np.array(samples_var)
+    #         mixture_mean = np.mean(samples_mean, axis=0)
+    #         mixture_var = np.mean(samples_var + np.square(samples_mean), axis=0) - np.square(mixture_mean)
+    #         target_test  = self.get_target_test(test_loader)
+    #         return target_test, mixture_mean, mixture_var
+
+    #     elif self.task =='classification':
+    #         samples = []
+    #         for _ in range(n_samples):
+    #             pred = []
+    #             for _, (features , _ ) in enumerate(test_loader):
+    #                 features  = features.to(self.device)
+    #                 output= self.network(features)
+    #                 pred.append(output.detach().cpu().numpy())
+    #             pred_i = np.concatenate(pred, axis=0)
+    #             samples.append(pred_i)
+    #         samples = np.array(samples)  
+    #         target_test  = self.get_target_test(test_loader)
+    #         return target_test, samples
 
 
             
 
-    def get_target_test(self, test_loader):
-        target_set = []
-        for _ , ( _ , target) in enumerate(test_loader):
-            target_set.append(target.numpy())
-        return np.concatenate(target_set, axis=0)
+    # def get_target_test(self, test_loader):
+    #     target_set = []
+    #     for _ , ( _ , target) in enumerate(test_loader):
+    #         target_set.append(target.numpy())
+    #     return np.concatenate(target_set, axis=0)
 
 
 class Network(nn.Module):
-    def __init__(self, input_dim, output_dim, net_arch, task):
+    def __init__(self, input_dim, output_dim, net_arch, task, get_aleatoric_uncertainty):
         super().__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.task = task
+        self.get_aleatoric_uncertainty = get_aleatoric_uncertainty
         self.dropout_probability = 0.5
         self.layers = nn.ModuleList()
         in_features = self.input_dim
@@ -176,12 +239,14 @@ class Network(nn.Module):
             in_features = hidden_size
 
         if self.task == 'regression':
-            self.layers.append(nn.Linear(in_features=in_features, out_features=2*self.output_dim))
+            if self.get_aleatoric_uncertainty:
+                self.layers.append(nn.Linear(in_features=in_features, out_features=2*self.output_dim))
+            else:
+                self.layers.append(nn.Linear(in_features=in_features, out_features=self.output_dim))
             self.Softplus= nn.Softplus()
         elif self.task == 'classification':
             self.layers.append(nn.Linear(in_features=in_features, out_features=self.output_dim))
             self.Sigmoid= nn.Sigmoid()
-                                    
         self.act = nn.ReLU(inplace=True)
 
     def forward(self, x):
@@ -194,9 +259,12 @@ class Network(nn.Module):
  
         if self.task == 'regression':
             mean = out[:, :self.output_dim]
-            # The variance should always be positive (softplus) and la
-            variance = self.Softplus(out[:, self.output_dim:])+ 1e-06 
-            return mean, variance
+            if self.get_aleatoric_uncertainty:
+                # The variance should always be positive (softplus) and la
+                variance = self.Softplus(out[:, self.output_dim:])+ 1e-06 
+                return mean, variance
+            else:
+                return mean
 
         elif self.task == 'classification':
             prob = self.Sigmoid(out)
