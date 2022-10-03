@@ -102,7 +102,6 @@ crps = 0.41
 
 nll = 4.72
 
-
  | <img src="/plots/Uniform_NN_MC_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
  |Periodic (uniform) Sensing Policy|
