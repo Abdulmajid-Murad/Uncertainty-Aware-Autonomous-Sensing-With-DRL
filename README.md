@@ -45,43 +45,43 @@ crps = 0.40 ± 0.02
 
 nll = 4.40 ± 1.42
 
- | <img src="/plots/agent_0_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_0_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
  |RL (agent0) Sensing Policy|
 
- | <img src="/plots/agent_1_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_1_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
  |RL (agent1) Sensing Policy|
 
- | <img src="/plots/agent_2_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_2_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
  |RL (agent2) Sensing Policy|
 
- | <img src="/plots/agent_3_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_3_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
  |RL (agent3) Sensing Policy|
 
- | <img src="/plots/agent_4_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_4_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
  |RL (agent4) Sensing Policy|
 
- | <img src="/plots/agent_5_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_5_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
  |RL (agent5) Sensing Policy|
 
- | <img src="/plots/agent_6_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_6_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
  |RL (agent6) Sensing Policy|
 
- | <img src="/plots/agent_7_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_7_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
  |RL (agent7) Sensing Policy|
 
- | <img src="/plots/agent_8_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_8_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
  |RL (agent8) Sensing Policy|
 
- | <img src="/plots/agent_9_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/agent_9_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
  |RL (agent9) Sensing Policy|
 

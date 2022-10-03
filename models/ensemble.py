@@ -4,8 +4,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.optim.lr_scheduler import ExponentialLR
-from probabilistic_forecast.utils.torch_utils import get_device
-from probabilistic_forecast.utils.plot_utils import plot_training_curve_ensemble, plot_regression, plot_classification
+from utils import get_device
+from utils import plot_training_curve_ensemble
 
 
 
@@ -161,7 +161,6 @@ class Deep_Ensemble():
         return mixture_mean, mixture_var
 
     def evaluate_clas(self, X_test, y_true_clas, **kwargs):
-        n_samples = kwargs.get('n_samples', 50)
         samples = []
         for network in self.ensemble:
             network.eval()
@@ -174,6 +173,13 @@ class Deep_Ensemble():
         samples = np.array(samples) 
         return samples
 
+    def load_parameters_reg(self, pre_trained_dir):
+        model_save_name_reg = pre_trained_dir + '/trained_network_'+ 'regression' +  '.pt'
+        self.ensemble.load_state_dict(torch.load(model_save_name_reg, map_location=self.device))
+    
+    def load_parameters_clas(self, pre_trained_dir):
+        model_save_name_clas = pre_trained_dir + '/trained_network_'+ 'classification' +  '.pt'
+        self.ensemble.load_state_dict(torch.load(model_save_name_clas, map_location=self.device))
 
 class Network(nn.Module):
     def __init__(self, input_dim, output_dim, net_arch, task, get_aleatoric_uncertainty):

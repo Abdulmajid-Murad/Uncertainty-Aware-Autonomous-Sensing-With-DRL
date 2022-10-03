@@ -56,7 +56,7 @@ def evaluate(args):
                                historical_sequence_length=args.historical_sequence_length,
                                sensing_station=args.sensing_station))
     print("**************** Running Uniform Sensing **********************")
-    uniform_reward, uniform_stats = uniform_sensing(env, fig_name="Uniform_"+args.sensing_station+"_"+args.agent_start_test)
+    uniform_reward, uniform_stats = uniform_sensing(env, fig_name="Uniform_"+args.predictor_model+'_'+args.sensing_station+"_"+args.agent_start_test)
     stats_names = ["MPOT", "rmse", "picp", "mpiw", "crps", "nll"]
     uniform_stats_values_names = [(name, value) for name, value in zip(stats_names, uniform_stats)]
     for result in uniform_stats_values_names:
@@ -69,7 +69,7 @@ def evaluate(args):
     all_stats= np.empty(shape=(len(agents), 7))
     for i, agent in enumerate(agents):
         model = PPO.load(agent)
-        rl_reward, rl_stats = evaluate_rl(model, env, fig_name='agent_'+str(i)+'_'+args.sensing_station+"_"+args.agent_start_test,  num_episodes=1)
+        rl_reward, rl_stats = evaluate_rl(model, env, fig_name='agent_'+str(i)+'_'+args.predictor_model+'_'+args.sensing_station+"_"+args.agent_start_test,  num_episodes=1)
         all_stats[i] = rl_stats
         print("----------------Agent {} --------------".format(i))
         RL_stats_values_names = [(name, value) for name, value in zip(stats_names, rl_stats)]

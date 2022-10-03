@@ -3,6 +3,14 @@ import math
 import numpy as np
 import torch
 
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+import seaborn as sns
+sns.set_theme()
+sns.set(font_scale=1.2)
+sns.set_style("whitegrid", {'grid.linestyle': '--'})
+
+
 def evaluate_rl(model, env, fig_name , num_episodes=1):
     catched_threeshold_exceedance_total = 0
     all_episode_rewards = []
@@ -77,5 +85,34 @@ def plot_training_curve_bnn(nll_history, kl_history, lr_history, fig_save_name):
     axs[2].set_xlabel('Epochs')
     axs[2].set_ylabel("Learning rate")
     axs[2].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+    fig.tight_layout()
+    fig.savefig(fig_save_name, bbox_inches='tight')
+
+
+def plot_training_curve(loss_history, lr_history, fig_save_name):
+    fig, axs = plt.subplots(1, 2, figsize=(14, 4))
+    axs[0].plot(loss_history)
+    axs[0].set_xlabel('Epochs')
+    axs[0].set_ylabel("NLL Loss")
+    axs[1].plot(lr_history)
+    axs[1].set_xlabel('Epochs')
+    axs[1].set_ylabel("Learning rate")
+    axs[1].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+    fig.tight_layout()
+    fig.savefig(fig_save_name, bbox_inches='tight')
+
+def plot_training_curve_ensemble(ensemble_loss_history, ensemble_lr_history, fig_save_name):
+    ensemble_size = len(ensemble_loss_history)
+    fig, axs = plt.subplots(ensemble_size, 2, figsize=(12, 3*ensemble_size))
+    model_idx=0
+    for model_idx, (loss_history, lr_history) in enumerate(zip(ensemble_loss_history, ensemble_lr_history)):
+        axs[model_idx][0].plot(loss_history)
+        axs[model_idx][0].set_xlabel('Epochs')
+        axs[model_idx][0].set_ylabel("NLL Loss")
+        axs[model_idx][1].plot(lr_history)
+        axs[model_idx][1].set_xlabel('Epochs')
+        axs[model_idx][1].set_ylabel("Learning rate")
+        axs[model_idx][1].ticklabel_format(axis='y', style='sci', scilimits=(0,0))
+        model_idx += 1
     fig.tight_layout()
     fig.savefig(fig_save_name, bbox_inches='tight')
