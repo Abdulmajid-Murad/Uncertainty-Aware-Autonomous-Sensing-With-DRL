@@ -54,6 +54,7 @@ def evaluate(args):
                                save_dir=args.save_dir,
                                forecast_horizon=args.forecast_horizon,
                                historical_sequence_length=args.historical_sequence_length,
+                               get_aleatoric_uncertainty=args.get_aleatoric_uncertainty, 
                                sensing_station=args.sensing_station))
     print("**************** Running Uniform Sensing **********************")
     uniform_reward, uniform_stats = uniform_sensing(env, fig_name="Uniform_"+args.predictor_model+'_'+args.sensing_station+"_"+args.agent_start_test)
@@ -101,6 +102,7 @@ if __name__ == '__main__':
     parser.add_argument('--predictor_end_train', type=str, default='2019-12-31', help='Predictor end date of training (default: 2019-01-01)') 
     parser.add_argument('--forecast_horizon', type=int, default=24 )
     parser.add_argument('--historical_sequence_length', type=int, default=24) 
+    parser.add_argument('--get_aleatoric_uncertainty', action='store_true', help=' Get aleatoric uncertainty by requiring the NN to output a distribution (default: False)')
     parser.add_argument('--prediction_task', type=str, default='regression', help='regression or both (regression and classification) (default: regression)')
     parser.add_argument('--predictor_model', type=str, default='BNN', help='BNN, NN_MC, Deep_Ensemble, or SWAG (default: BBC)')
     #General

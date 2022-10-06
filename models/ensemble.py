@@ -45,8 +45,16 @@ class Deep_Ensemble():
             return self.criterion(output, target)
 
 
-    def train(self, train_loader, n_epochs, batch_size, stats, pre_trained_dir, Nbatches, adversarial_training=True):
  
+    def train(self, 
+             train_loader, 
+             batch_size, 
+             stats, 
+             pre_trained_dir, 
+             Nbatches, 
+             adversarial_training=True,
+             **kwargs):
+        n_epochs = kwargs.get('n_epochs', 100)
         print('Training {} model {} adversarial training. Task: {}'.format(type(self).__name__, 
             'with' if adversarial_training else 'without', self.task))
 

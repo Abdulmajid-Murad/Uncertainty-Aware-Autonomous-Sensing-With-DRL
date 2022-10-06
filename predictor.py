@@ -28,6 +28,7 @@ class Predictor():
     measurement_error: float = 1e-06
     get_aleatoric_uncertainty: bool = False
     model_type: str = "BNN"
+    batch_size: int = 64
 
     def __post_init__(self):
         self._process_data()
@@ -168,38 +169,50 @@ class Predictor():
         else:
             return pred_lower, pred_upper, pred_mean, y_true_reg, test_index, mixture_mean, mixture_var, target_test_reg, y_true_clas
 
-    def train(self, batch_size: int = 64, n_epochs: int = 1000):
+    def train(self, n_epochs: int = 1000):
         X_train, y_train_reg, y_train_clas = self.get_train_data()
-        Nbatches = X_train.shape[0]/batch_size
+        Nbatches = X_train.shape[0]/self.batch_size
 
 
         train_set_reg =  CustomDataset(X_train, y_train_reg)
-        train_loader_reg = DataLoader(train_set_reg, batch_size=batch_size, drop_last=False, shuffle=True, num_workers=0)
+        train_loader_reg = DataLoader(train_set_reg, batch_size=self.batch_size, drop_last=False, shuffle=True, num_workers=0)
 
 
         train_set_clas =  CustomDataset(X_train, y_train_clas)
-        train_loader_clas = DataLoader(train_set_clas, batch_size=batch_size, drop_last=False, shuffle=True, num_workers=0)
+        train_loader_clas = DataLoader(train_set_clas, batch_size=self.batch_size, drop_last=False, shuffle=True, num_workers=0)
 
         self.model_reg.train(train_loader=train_loader_reg,
-                    n_epochs=n_epochs,
-                    batch_size=batch_size,
+                    batch_size=self.batch_size,
                     stats=self.stats, 
                     pre_trained_dir=self.save_dir,
                     Nbatches=Nbatches,
                     adversarial_training=False)
         if self.task == 'both':
             self.model_clas.train(train_loader=train_loader_clas,
-                        n_epochs=n_epochs,
-                        batch_size=batch_size,
+                        batch_size=self.batch_size,
                         stats=self.stats, 
                         pre_trained_dir=self.save_dir,
                         Nbatches=Nbatches,
                         adversarial_training=False)
     
     def load(self, pre_trained_dir):
-        self.model_reg.load_parameters_reg(pre_trained_dir)
-        if self.task == "both":
-            self.model_clas.load_parameters_clas(pre_trained_dir)
+
+        if self.model_type == "SWAG":
+            # BatchNorm buffers update using train dataset.
+            X_train, y_train_reg, y_train_clas = self.get_train_data()
+            train_set_reg =  CustomDataset(X_train, y_train_reg)
+            train_loader_reg = DataLoader(train_set_reg, batch_size=self.batch_size, drop_last=False, shuffle=True, num_workers=0)
+
+            self.model_reg.load_parameters_reg(pre_trained_dir, train_loader_reg)
+            if self.task == "both":
+                train_set_clas =  CustomDataset(X_train, y_train_clas)
+                train_loader_clas = DataLoader(train_set_clas, batch_size=self.batch_size, drop_last=False, shuffle=True, num_workers=0)
+                self.model_clas.load_parameters_clas(pre_trained_dir, train_loader_clas)
+
+        else:
+            self.model_reg.load_parameters_reg(pre_trained_dir)
+            if self.task == "both":
+                self.model_clas.load_parameters_clas(pre_trained_dir)
                 
     def rescale(self, y):
         y = y * self.stats['y_reg_std'] + self.stats['y_reg_mean']

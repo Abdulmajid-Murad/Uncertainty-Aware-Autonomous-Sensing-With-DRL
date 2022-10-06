@@ -13,126 +13,85 @@ Run the "main.py" script to evaluate the already trained agents. This will plot 
 
 ### Uniform
 
-MPOT = 25.00
-
-rmse = 16.81
-
-picp = 0.70
-
-mpiw = 14.69
-
-crps = 0.43
-
-nll = 3.70
-
  | <img src="/plots/Uniform_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
- |Periodic (uniform) Sensing Policy|
+ |Periodic (uniform) Sensing Policy using a BNN predictor|
 
 ### RL
 
-****************** Results for all Agents **********************
-
-MPOT = 37.40 ± 4.25
-
-rmse = 15.17 ± 1.38
-
-picp = 0.70 ± 0.01
-
-mpiw = 13.81 ± 0.28
-
-crps = 0.40 ± 0.02
-
-nll = 4.40 ± 1.42
 
  | <img src="/plots/agent_0_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
- |RL (agent0) Sensing Policy|
+ |RL (agent0) Sensing Policy using a BNN predictor|
 
- <!-- | <img src="/plots/agent_1_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
- |:--:|
- |RL (agent1) Sensing Policy|
 
- | <img src="/plots/agent_2_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
- |:--:|
- |RL (agent2) Sensing Policy|
+## Swag Predictor
 
- | <img src="/plots/agent_3_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
- |:--:|
- |RL (agent3) Sensing Policy|
+ ```bash
+ python main.py --predictor_model='SWAG'
+ ```
 
- | <img src="/plots/agent_4_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
- |:--:|
- |RL (agent4) Sensing Policy|
+### Uniform
 
- | <img src="/plots/agent_5_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
- |:--:|
- |RL (agent5) Sensing Policy|
 
- | <img src="/plots/agent_6_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
- |:--:|
- |RL (agent6) Sensing Policy|
 
- | <img src="/plots/agent_7_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ | <img src="/plots/Uniform_SWAG_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
- |RL (agent7) Sensing Policy|
+ |Periodic (uniform) Sensing Policy using a SWAG predictor|
 
- | <img src="/plots/agent_8_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
- |:--:|
- |RL (agent8) Sensing Policy|
+### RL
 
- | <img src="/plots/agent_9_BNN_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+
+ | <img src="/plots/agent_0_SWAG_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
- |RL (agent9) Sensing Policy| -->
+ |RL (agent0) Sensing Policy guided using a SWAG predictor|
+
+## Deep Ensemble Predictor
+
+ ```bash
+ python main.py --predictor_model='Deep_Ensemble'
+ ```
+
+### Uniform
+
+
+ | <img src="/plots/Uniform_Deep_Ensemble_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |Periodic (uniform) Sensing Policy using a Deep Ensemble Predictor|
+
+### RL
+
+
+
+ | <img src="/plots/agent_0_Deep_Ensemble_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
+ |:--:|
+ |RL (agent0) Sensing Policy using a Deep Ensemble predictor|
+
 
 
 ## NN with MC dropout Predictor
 
+ ```bash
+ python main.py --predictor_model='NN_MC'
+ ```
+
 ### Uniform
 
-MPOT = 25.00
-
-rmse = 14.85
-
-picp = 0.56
-
-mpiw = 10.51
-
-crps = 0.41
-
-nll = 4.72
 
  | <img src="/plots/Uniform_NN_MC_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
- |Periodic (uniform) Sensing Policy|
+ |Periodic (uniform) Sensing Policy using a NN_MC Predictor|
 
 ### RL
 
-****************** Results for all Agents **********************
-
-MPOT = 38.10 ± 3.01
-
-rmse = 12.70 ± 0.80
-
-picp = 0.55 ± 0.01
-
-mpiw = 10.77 ± 0.32
-
-crps = 0.39 ± 0.02
-
-nll = 5.38 ± 0.64
 
 
  | <img src="/plots/agent_0_NN_MC_Tiller_2020-12-01.jpg" alt="drawing" width="800"/> |
  |:--:|
- |RL (agent0) Sensing Policy|
+ |RL (agent0) Sensing Policy using a NN_MC predictor|
 
 
-## Predictor
-TODO: add more details
 
-## Sensing Agent
-TODO: add more details
 
  ## Dataset
  

@@ -42,7 +42,15 @@ class NN_MC():
             return self.criterion(output, target)
 
 
-    def train(self, train_loader, n_epochs, batch_size, stats, pre_trained_dir, Nbatches, adversarial_training=True):
+    def train(self, 
+             train_loader, 
+             batch_size, 
+             stats, 
+             pre_trained_dir, 
+             Nbatches, 
+             adversarial_training=True,
+             **kwargs):
+        n_epochs = kwargs.get('n_epochs', 1000)
         print('Training {} model {} adversarial training. Task: {}'.format(type(self).__name__, 
             'with' if adversarial_training else 'without', self.task))
 
@@ -171,57 +179,6 @@ class NN_MC():
         model_save_name_clas = pre_trained_dir + '/trained_network_'+ 'classification' +  '.pt'
         self.network.load_state_dict(torch.load(model_save_name_clas, map_location=self.device))
     
-    
-    # def evaluate(self, test_loader, n_samples, pre_trained_dir, adversarial_training=True):
-    #     print('Evaluating a pretrained {} model {} adversarial training. Task: {}'.format(type(self).__name__, 
-    #         'with' if adversarial_training else 'without', self.task))
-    #     pre_trained_dir = os.path.join(pre_trained_dir, type(self).__name__)
-    #     model_save_name = pre_trained_dir + '/trained_network_'+ self.task + ('_adv.pt' if adversarial_training else '.pt')
-
-    #     self.network.load_state_dict(torch.load(model_save_name))
-    #     self.network.eval()
-
-    #     if self.task =='regression':
-    #         samples_mean, samples_var = [], []
-    #         for _ in range(n_samples):
-    #             pred_mean_set, pred_var_set = [], []
-    #             for _, (features , _ ) in enumerate(test_loader):
-    #                 features = features.to(self.device)
-    #                 pred_mean, pred_var= self.network(features)
-    #                 pred_mean_set.append(pred_mean.detach().cpu().numpy())
-    #                 pred_var_set.append(pred_var.detach().cpu().numpy())
-    #             pred_mean_i, pred_var_i =  np.concatenate(pred_mean_set, axis=0), np.concatenate(pred_var_set, axis=0)
-    #             samples_mean.append(pred_mean_i)
-    #             samples_var.append(pred_var_i)
-    #         samples_mean = np.array(samples_mean)
-    #         samples_var = np.array(samples_var)
-    #         mixture_mean = np.mean(samples_mean, axis=0)
-    #         mixture_var = np.mean(samples_var + np.square(samples_mean), axis=0) - np.square(mixture_mean)
-    #         target_test  = self.get_target_test(test_loader)
-    #         return target_test, mixture_mean, mixture_var
-
-    #     elif self.task =='classification':
-    #         samples = []
-    #         for _ in range(n_samples):
-    #             pred = []
-    #             for _, (features , _ ) in enumerate(test_loader):
-    #                 features  = features.to(self.device)
-    #                 output= self.network(features)
-    #                 pred.append(output.detach().cpu().numpy())
-    #             pred_i = np.concatenate(pred, axis=0)
-    #             samples.append(pred_i)
-    #         samples = np.array(samples)  
-    #         target_test  = self.get_target_test(test_loader)
-    #         return target_test, samples
-
-
-            
-
-    # def get_target_test(self, test_loader):
-    #     target_set = []
-    #     for _ , ( _ , target) in enumerate(test_loader):
-    #         target_set.append(target.numpy())
-    #     return np.concatenate(target_set, axis=0)
 
 
 class Network(nn.Module):
